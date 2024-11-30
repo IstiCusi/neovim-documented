@@ -1,16 +1,36 @@
-// Make sure extern symbols are exported on Windows
+// ---------------------------------------------------------------------------------------------
+/* 
+    INFO: The EXTERN definition is used, that global variables are definable and intitializable
+    directly in the header files. The EXTERN and INIT declaration are found in "./macros_defs.h"
+    When EXTERN is defined (as here in the main.c), than the header is included and also the 
+    initializiation is done, what leads global initialized variables directly in the main.c. 
+    When EXTERN is not defined, but macros_defs.h loaded, the EXTERN resolves to extern and no
+    initialization is done. See also nvim/globals.h
+*/
+
 #ifdef WIN32
+// Make sure extern symbols from dlls are exported on Windows and can be used
 # define EXTERN __declspec(dllexport)
 #else
+// Use just EXTERN on Linux and mac
 # define EXTERN
 #endif
-#include <assert.h>
-#include <limits.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
+// ---------------------------------------------------------------------------------------------
+
+/*
+    INFO: AddressSanitizer (ASan) and UndefinedBehaviorSanitizer (UBSan) are runtime tools 
+    for detecting critical issues during program execution. ASan focuses on memory errors, 
+    such as buffer overflows, use-after-free, and memory leaks, while UBSan targets undefined 
+    behavior, such as integer overflows, division by zero, or invalid type casts.
+    By including sanitizer/asan_interface.h, ASan-specific functions allow memory regions 
+    to be marked as poisoned or unpoisoned to track invalid access. Similarly, 
+    sanitizer/ubsan_interface.h provides UBSan-specific functions to diagnose and handle 
+    undefined behavior. 
+    This integration is conditionally enabled with the ENABLE_ASAN_UBSAN macro. UBSan's 
+    interface is included only on non-Windows platforms, as indicated by the MSWIN macro.
+*/
+
 #ifdef ENABLE_ASAN_UBSAN
 # include <sanitizer/asan_interface.h>
 # ifndef MSWIN
@@ -18,95 +38,288 @@
 # endif
 #endif
 
+// ---------------------------------------------------------------------------------------------
+
+// INFO: Standard includes
+
+#include <assert.h>
+#include <limits.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// ---------------------------------------------------------------------------------------------
+
+// INFO: Defines architecture, project settings, system features, platform capabilities, and test paths.
 #include "auto/config.h"  // IWYU pragma: keep
+
+// INFO: Defines namespace-related data structures, initialization, and utility functions for Neovim API handling.
 #include "nvim/api/extmark.h"
+
+// INFO: Defines core Neovim API types, enums, macros, and utility functions for managing objects, error handling, and message communication.
 #include "nvim/api/private/defs.h"
+
+// INFO: Defines macros, data structures, and utility functions for Neovim API objects, error handling, state management, and script contexts.
 #include "nvim/api/private/helpers.h"
+
+// INFO: Declares UI extension names and includes UI-related definitions and generated declarations for Neovim's API.
 #include "nvim/api/ui.h"
+
+// INFO: Declares argument list-related functionality and includes command expansion and execution definitions, with generated declarations for Neovim's argument list handling.
 #include "nvim/arglist.h"
+
+// INFO: Provides ASCII character definitions, control characters, path separators, and utility functions for character checks in Neovim.
 #include "nvim/ascii_defs.h"
+
+// INFO: Defines structures, enums, and macros for managing Neovim's autocmd events, states, and related buffers or windows.
 #include "nvim/autocmd.h"
+
+// INFO: Defines structures and types for managing autocommands, patterns, and execution contexts in Neovim.
 #include "nvim/autocmd_defs.h"
+
+// INFO: Defines enums, flags, and inline functions for managing buffers, including file operations, buffer states, and quickfix lists in Neovim.
 #include "nvim/buffer.h"
+
+// INFO: Defines structures and enums for managing windows, buffers, and UI elements in Neovim, including configuration, highlighting, and folding states.
 #include "nvim/buffer_defs.h"
+
+// INFO: Defines structures and inline functions for handling communication channels in Neovim, including RPC, processes, and streams.
 #include "nvim/channel.h"
+
+// INFO: Defines enums and structures for managing different types of communication streams and callbacks in Neovim, including standard IO, sockets, and internal states.
 #include "nvim/channel_defs.h"
+
+// INFO: Defines structures and enums for managing decorations in Neovim, including highlights, virtual text, signs, and their rendering states.
 #include "nvim/decoration.h"
+
+// INFO: Declares the decoration provider system in Neovim, indicating whether a provider is active and managing decorations dynamically.
 #include "nvim/decoration_provider.h"
+
+// INFO: Defines global variables for managing diff mode settings in Neovim, including context, fold column width, and redraw requirements.
 #include "nvim/diff.h"
+
+// INFO: Defines structures and variables for rendering lines in Neovim, including terminal attributes, extmarks, spell checking, and conceal cursor states.
 #include "nvim/drawline.h"
+
+// INFO: Declares functions and global variables for screen redraw management in Neovim.
 #include "nvim/drawscreen.h"
+
+// INFO: Defines shared error messages for Neovim, used across various modules for common errors.
 #include "nvim/errors.h"
+
+// INFO: Provides definitions and structures for evaluating expressions, managing variables, timers, and Vim's internal scripting functions.
 #include "nvim/eval.h"
+
+// INFO: Defines utilities and macros for manipulating Vimscript objects such as lists, dictionaries, and blobs.
 #include "nvim/eval/typval.h"
+
+// INFO: Provides structures and enums for handling Vimscript variables, including lists, dictionaries, blobs, functions, and their operations.
 #include "nvim/eval/typval_defs.h"
+
+// INFO: Defines structures, enums, and macros for handling user-defined functions in Vimscript, including closures, dictionary methods, and execution contexts.
 #include "nvim/eval/userfunc.h"
+
+// INFO: Provides structures and definitions for managing event loops using libuv, including event queues, child process handling, timers, and synchronization.
 #include "nvim/event/loop.h"
+
+// INFO: Defines macros and functions for managing and processing event queues, including handling timed conditions and polling events in Neovim's multiqueue system.
 #include "nvim/event/multiqueue.h"
+
+// INFO: Provides utilities for initializing and managing processes, including status checks and retrieval of the executable path, within Neovim's event loop system.
 #include "nvim/event/proc.h"
+
+// INFO: Defines interfaces for handling streams in Neovim's event-driven architecture, including reading, writing, and managing data streams.
 #include "nvim/event/stream.h"
+
+// INFO: Defines flags and constants for the `do_ecmd()` function, which manages opening and editing buffers in Neovim.
 #include "nvim/ex_cmds.h"
+
+// INFO: Defines flags, constants, and structures for handling command-line execution and state saving in Neovim.
 #include "nvim/ex_docmd.h"
+
+// INFO: Declares flags and includes for handling input line operations and command-line interactions in Neovim.
 #include "nvim/ex_getln.h"
+
+// INFO: Defines data structures and enumerations for handling extmarks in Neovim, including splice, move, update, and undo operations.
 #include "nvim/extmark.h"
+
+// INFO: Defines constants and data structures for file I/O operations in Neovim, including read/write flags, encoding conversions, and buffer sizes.
 #include "nvim/fileio.h"
+
+// INFO: Declares structures and variables for managing code folding in Neovim, including disabling fold updates and fold-related definitions.
 #include "nvim/fold.h"
+
+// INFO: Provides macros and functions for working with dynamically growing arrays (garray) in Neovim, including initialization, appending, and deep clearing of elements.
 #include "nvim/garray.h"
+
+// INFO: Defines structures and constants for input handling in Neovim, including buffer flushing and script input stream management.
 #include "nvim/getchar.h"
+
+// INFO: Provides macros for internationalization using gettext, with compatibility support for systems without a working libintl library.
 #include "nvim/gettext_defs.h"
+
+// INFO: Provides constants, global variables, and macros essential for core functionality in Neovim, such as window management, command execution, and visual mode handling. This header also includes support for customization and various operational states during editor execution.
 #include "nvim/globals.h"
+
+// INFO: This header defines core structures, variables, and functions for managing the screen grid in Neovim. The screen grid represents the terminal's display area and handles drawing operations for text and attributes. It supports both single and multiple grid modes for rendering UI components.
 #include "nvim/grid.h"
+
+// INFO: Hash table utilities and iteration macros for Neovim, including handling deleted items.
 #include "nvim/hashtab.h"
+
+// INFO: Highlight group and attribute definitions for Neovim, with default colors and namespaces.
 #include "nvim/highlight.h"
+
+// INFO: Highlight group definitions with a maximum ID limit and a color name table for Neovim.
 #include "nvim/highlight_group.h"
+
+// INFO: Defines keycode mappings, modifier masks, and utility macros for processing special keys and sequences in Neovim.
 #include "nvim/keycodes.h"
+
+// INFO: Provides logging macros for different log levels (debug, info, warning, error) and utilities for call stack logging in Neovim.
 #include "nvim/log.h"
+
+// INFO: Defines Lua state management, API function integration, and Lua reference handling for Neovim, with special handling for nil and boolean return values.
 #include "nvim/lua/executor.h"
+
+// INFO: Includes the necessary definitions for secure Lua operations, interacting with Neovim's ex_cmds and ensuring generated declarations are correctly linked.
 #include "nvim/lua/secure.h"
+
+// INFO: Includes Lua and Tree-sitter related definitions for Neovim, with a counter for tracking query parse operations.
 #include "nvim/lua/treesitter.h"
+
+// INFO: Defines utility macros, string manipulation functions, platform-specific code, and compiler-related settings, along with functions for handling character case, array sizes, and platform-dependent behavior.
 #include "nvim/macros_defs.h"
+
+// INFO: Defines a structure for managing command-line parameters and arguments passed to the main function, along with a global loop variable and constants for the maximum number of commands.
 #include "nvim/main.h"
+
+// INFO: Defines functions and macros for handling marks, including converting mark names to offsets, setting and resetting file marks, and managing extended marks with file names.
 #include "nvim/mark.h"
+
+// INFO: Defines a macro `LINEEMPTY` to check if a given line is empty by verifying if the first character is null (NUL).
 #include "nvim/memline.h"
+
+// INFO: The header defines memory allocation function signatures for `malloc()`, `free()`, `calloc()`, and `realloc()`, and provides macros for memory management. Additionally, it includes conditionally compiled sections for unit testing and memory freeing functions.
 #include "nvim/memory.h"
+
+// INFO: The header defines dialog types, return values for dialog functions, and message handling variables for Vim, including a message history and grid for displaying messages. It also includes macros and functions for managing message display and errors.
 #include "nvim/message.h"
+
+// INFO: This header defines constants, enums, and flags related to mouse interactions in Neovim, such as mouse button events, mouse scroll directions, and the result codes for mouse-based jumps to different areas of the interface (e.g., buffer, status line, fold column). It also includes various flags controlling mouse behavior during operations like visual mode and movement.
 #include "nvim/mouse.h"
+
+// INFO: Header file containing definitions for moving text, handling movement commands, and buffer navigation within Neovim.
 #include "nvim/move.h"
+
+// INFO: Defines message-passing and RPC channel structures for handling asynchronous events, input, and memory management in Neovim.
 #include "nvim/msgpack_rpc/channel.h"
+
+// INFO: Defines server-side interfaces and structures for handling MessagePack-RPC communication in Neovim, enabling remote procedure calls between Neovim and external clients or processes.
 #include "nvim/msgpack_rpc/server.h"
+
+// INFO: Contains definitions related to finding identifiers or strings under the cursor in Neovim, including flags for different search types (identifier, string, evaluation). It also defines a shared buffer for displaying commands in the status line.
 #include "nvim/normal.h"
+
+// INFO: Defines text manipulation operations, registers for yank, delete, insert, and blockwise operations, and helper functions for register management in Neovim.
 #include "nvim/ops.h"
+
+// INFO: Defines buffer copy options, flags for option-setting functions, and helper macros for managing option values in Neovim.
 #include "nvim/option.h"
+
+// INFO: Defines various option flags, structures for managing options in Neovim, including value types, callback functions, and argument parsing for option expansions.
 #include "nvim/option_defs.h"
+
+// INFO: Defines various global variables for Neovim options, including default settings for encoding, formatting, and UI behaviors, as well as flags for option management and keymaps.
 #include "nvim/option_vars.h"
+
+// INFO: Defines a type for handling different character options (`kFillchars`, `kListchars`) in Neovim's configuration, with the necessary includes for option handling and command expansion.
 #include "nvim/optionstr.h"
+
+// INFO: Defines file access flags for `file_open()` and a function to calculate available space in a file descriptor's buffer, facilitating file manipulation in Neovim's system I/O operations.
 #include "nvim/os/fileio.h"
+
+// INFO: Defines a structure for file handling in Neovim, managing file descriptors, buffers, and read/write operations. Provides functions to check for EOF and retrieve the associated file descriptor.
 #include "nvim/os/fileio_defs.h"
+
+// INFO: Includes definitions for file system operations in Neovim, utilizing `libuv` for asynchronous I/O and managing file handling related types and structures.
 #include "nvim/os/fs.h"
+
+// INFO: Declares the `used_stdin` flag and includes necessary headers for event handling and private definitions related to standard input usage.
 #include "nvim/os/input.h"
+
+// INFO: Declares language-related functions for handling locales, language variables, and language initialization in Neovim, with Windows-specific export handling.
 #include "nvim/os/lang.h"
+
+// INFO: Declares external environment-related variables and functions for managing system paths, user settings, and environment variables in Neovim, with generated headers for various OS-specific operations.
 #include "nvim/os/os.h"
+
+// INFO: Defines platform-specific file handling, system error handling, and path management macros, along with functions for working with system-level file operations and buffers, including compatibility adjustments for different OSes like Windows and Unix-like systems.
 #include "nvim/os/os_defs.h"
+
+// INFO: Declares functions for initializing, handling, and managing signals, including handling deadly signals and ensuring proper signal acceptance or rejection, with platform-specific export functionality.
 #include "nvim/os/signal.h"
+
+// INFO: Defines an enumeration for XDG variables, including directories for configuration, data, cache, state, and runtime, as well as related environment variable paths.
 #include "nvim/os/stdpaths_defs.h"
+
+// INFO: Defines flags for `expand_wildcards()` and file comparison constants, useful for path and file operations.
 #include "nvim/path.h"
+
+// INFO: Defines structures and state management for popup menu items, including display, selection, and highlighting attributes.
 #include "nvim/popupmenu.h"
+
+// INFO: Defines profiling and timing functions for command execution, including the `TIME_MSG` macro for logging timing messages.
 #include "nvim/profile.h"
+
+// INFO: Defines flags for the `skip_vimgrep_pat` function, including global search, no jump, and fuzzy matching options for quickfix commands.
 #include "nvim/quickfix.h"
+
+// INFO: Defines structures and flags for managing execution context, sourced scripts, and path searching in Neovim.
 #include "nvim/runtime.h"
+
+// INFO: Defines structures and types for managing execution stack, script variables, and profiling information in Neovim.
 #include "nvim/runtime_defs.h"
+
+// INFO: Defines flags for controlling the behavior of the `shada_read_file` function and its operations in Neovim, such as loading marks, overwriting info, and handling missing files.
 #include "nvim/shada.h"
+
+// INFO: Declares an array `tab_page_click_defs` and its size `tab_page_click_defs_size` for defining actions associated with tabline clicks in Neovim.
 #include "nvim/statusline.h"
+
+// INFO: Defines utility functions and structures for string manipulation, including a `StringBuilder` type and key/value pair structure (`keyvalue_T`), along with functions for string comparison and appending in Neovim.
 #include "nvim/strings.h"
+
+// INFO: Defines various highlight flags for syntax highlighting in Neovim, including flags for handling line matching, folding, concealing, and controlling the behavior of highlighting in different contexts.
 #include "nvim/syntax.h"
+
+// INFO: Defines a structure for terminal options in Neovim, including callbacks for writing, resizing, and closing the terminal, as well as the terminal's dimensions and configuration settings such as forcing CRLF line endings.
 #include "nvim/terminal.h"
+
+// INFO: Defines various types and constants for Vim, including types for ACLs, terminal data, and Lua references, as well as structures for handling file buffers, windows, and runtime types like proftime_T and TriState.
 #include "nvim/types_defs.h"
+
+// INFO: Defines the necessary includes and external variables for the UI system in Vim, including event handling, grid and highlight definitions, and UI attachment functionality.
 #include "nvim/ui.h"
+
+// INFO: Defines external variables and structures for managing the client-side UI communication in Neovim, including event handling, grid buffering, and UI attachment status.
 #include "nvim/ui_client.h"
+
+// INFO: Defines external functions for managing UI composition, grid handling, and UI attachment/detachment in Neovim's UI compositor.
 #include "nvim/ui_compositor.h"
+
+// INFO: Defines versioning information for Neovim, including major and minor version numbers, version strings, and compatibility constants.
 #include "nvim/version.h"
+
+// INFO: Defines constants, enumerations, and return values related to file handling, directory changes, and external function statuses in Neovim.
 #include "nvim/vim_defs.h"
+
+// INFO: Defines flags, constants, and variables related to window splitting, screen size constraints, and tabpage management in Neovim.
 #include "nvim/window.h"
+
+// INFO: Defines the `float_anchor_str` array, mapping cardinal and diagonal directions to their respective float anchor constants in Neovim.
 #include "nvim/winfloat.h"
 
 #ifdef MSWIN
